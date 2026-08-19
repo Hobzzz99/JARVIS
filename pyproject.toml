@@ -1,0 +1,55 @@
+[project]
+name = "jarvis-ai-assistant"
+version = "1.0.0"
+description = "Multi-agent AI intelligence briefing system built on LangGraph, MCP, Gemini and local HuggingFace models."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Mohab Ahmed" }]
+keywords = ["ai", "agents", "langgraph", "mcp", "gemini", "huggingface", "fastapi"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --strict-markers"
+markers = [
+    "integration: hits live external services or downloads models (deselect with -m 'not integration')",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["agents", "api", "jarvis_mcp", "llm", "workflows"]
+omit = ["*/__init__.py", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [".venv", "venv", "frontend", "build", "dist"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # import sorting
+    "B",   # bugbear
+    "UP",  # pyupgrade
+    "C4",  # comprehensions
+    "SIM", # simplify
+]
+ignore = [
+    "E501",   # line length is enforced by the formatter
+    "B008",   # FastAPI dependency injection uses calls in defaults
+    "SIM105", # contextlib.suppress is not always clearer
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

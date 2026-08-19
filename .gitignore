@@ -1,0 +1,95 @@
+# ---------------------------------------------------------------------------
+# Secrets — NEVER commit real credentials
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib60/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# Testing / linting caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# ---------------------------------------------------------------------------
+# Model + data caches (HuggingFace models are 1-2 GB — never commit)
+# ---------------------------------------------------------------------------
+.cache/
+models/
+*.bin
+*.safetensors
+*.onnx
+memory/chroma/
+
+# ---------------------------------------------------------------------------
+# Runtime memory state (seeded from memory/*.example.json)
+# ---------------------------------------------------------------------------
+memory/briefing_history.json
+memory/conversation_memory.json
+memory/workflow_logs.json
+memory/user_preferences.json
+
+# ---------------------------------------------------------------------------
+# Node / frontend
+# ---------------------------------------------------------------------------
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------------------------------------------------------------------------
+# Editors / OS
+# ---------------------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.antigravitycli/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo

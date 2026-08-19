@@ -1,0 +1,31 @@
+# ---------------------------------------------------------------------------
+# JARVIS — runtime dependencies
+# Lower bounds are the versions this project is developed and tested against;
+# upper bounds guard against breaking major releases.
+# ---------------------------------------------------------------------------
+
+# --- API layer -------------------------------------------------------------
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+pydantic>=2.8,<3.0
+python-dotenv>=1.0,<2.0
+
+# --- Agent orchestration ---------------------------------------------------
+langgraph>=0.2,<2.0
+
+# --- Tool protocol ---------------------------------------------------------
+mcp>=1.0,<2.0
+
+# --- Hosted LLM ------------------------------------------------------------
+# Current Google GenAI SDK. The legacy `google-generativeai` package is
+# end-of-life and intentionally not used.
+google-genai>=1.0
+
+# --- Local AI (ranking, embeddings, summarisation) -------------------------
+transformers>=4.44
+torch>=2.2
+sentence-transformers>=3.0
+
+# --- Data sources ----------------------------------------------------------
+requests>=2.32,<3.0
+arxiv>=2.1

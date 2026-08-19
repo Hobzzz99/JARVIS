@@ -1,0 +1,18 @@
+# Normalise line endings so Windows and Unix checkouts produce identical blobs.
+* text=auto eol=lf
+
+# Shell scripts must keep LF even on Windows checkouts.
+*.sh text eol=lf
+
+# Binary assets — never touch these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# Keep generated lockfiles out of diff noise and language statistics.
+frontend/package-lock.json linguist-generated=true -diff
