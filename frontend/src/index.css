@@ -27,10 +27,15 @@
   color-scheme: dark;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Must live in the `base` layer. Tailwind v4 emits utilities inside cascade
+   layers, and unlayered rules outrank layered ones regardless of specificity —
+   an unlayered `* { margin: 0 }` silently defeats every `mx-auto` in the app. */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 body {

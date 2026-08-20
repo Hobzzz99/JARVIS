@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 import config
@@ -73,6 +75,31 @@ def test_planner_rejects_a_response_with_no_json():
         planner_agent._extract_json("I am afraid I cannot do that, Dave.")
 
 
+def test_planner_trims_over_long_news_queries(monkeypatch: pytest.MonkeyPatch):
+    """NewsAPI ANDs every term, so a descriptive phrase matches zero articles."""
+    monkeypatch.setattr(planner_agent, "load_preferences", lambda: PREFERENCES)
+    monkeypatch.setattr(planner_agent, "get_recent_briefings", lambda n=3: [])
+    monkeypatch.setattr(
+        planner_agent,
+        "gemini_complete",
+        lambda *a, **k: json.dumps(
+            {
+                "news_queries": [
+                    "Google DeepMind agentic AI coding frameworks announcement",
+                    "AI agents",
+                ],
+                "paper_queries": ["LLM agents"],
+                "focus_topics": ["Agentic AI"],
+            }
+        ),
+    )
+
+    plan = planner_agent.run_planner_agent()
+
+    assert plan["news_queries"] == ["Google DeepMind agentic AI", "AI agents"]
+    assert all(len(q.split()) <= planner_agent.MAX_NEWS_QUERY_WORDS for q in plan["news_queries"])
+
+
 # --------------------------------------------------------------------------- #
 # Retrieval
 # --------------------------------------------------------------------------- #
@@ -93,6 +120,56 @@ def test_retrieval_removes_exact_title_duplicates(monkeypatch: pytest.MonkeyPatc
     result = retrieval_agent.run_retrieval_agent({"news_queries": ["q"], "paper_queries": []})
 
     assert [a["title"] for a in result["articles"]] == ["Same Story", "Different"]
+
+
+def test_retrieval_retries_with_broad_terms_when_every_query_is_empty(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """An over-specific plan must not leave the briefing with no news at all."""
+    config.reload_settings()
+    attempted: list[str] = []
+
+    def _fetch(query, **_):
+        attempted.append(query)
+        # Only the broad catch-all returns anything.
+        return [{"title": "Broad hit", "description": "d"}] if len(query.split()) <= 2 else []
+
+    monkeypatch.setattr(retrieval_agent, "fetch_ai_news", _fetch)
+    monkeypatch.setattr(retrieval_agent, "fetch_ai_papers", lambda **_: [])
+    monkeypatch.setattr(
+        retrieval_agent, "deduplicate_articles", lambda items, threshold=None: items
+    )
+
+    plan = {"news_queries": ["Google DeepMind agentic coding frameworks announcement"]}
+    result = retrieval_agent.run_retrieval_agent(plan)
+
+    assert result["articles"], "retry should have recovered articles"
+    assert "artificial intelligence" in attempted
+    assert any(len(q.split()) <= 2 for q in attempted)
+
+
+def test_retrieval_does_not_retry_when_articles_were_found(monkeypatch: pytest.MonkeyPatch):
+    config.reload_settings()
+    calls: list[str] = []
+
+    def _fetch(query, **_):
+        calls.append(query)
+        return [{"title": "Found", "description": "d"}]
+
+    monkeypatch.setattr(retrieval_agent, "fetch_ai_news", _fetch)
+    monkeypatch.setattr(retrieval_agent, "fetch_ai_papers", lambda **_: [])
+    monkeypatch.setattr(
+        retrieval_agent, "deduplicate_articles", lambda items, threshold=None: items
+    )
+
+    retrieval_agent.run_retrieval_agent({"news_queries": ["AI agents"]})
+
+    assert calls == ["AI agents"]
+
+
+def test_broaden_always_includes_a_catch_all():
+    assert "artificial intelligence" in retrieval_agent._broaden(["a very long specific query"])
+    assert "artificial intelligence" in retrieval_agent._broaden([])
 
 
 def test_retrieval_survives_a_failing_dedup_model(monkeypatch: pytest.MonkeyPatch):

@@ -811,7 +811,10 @@ export default function App() {
                             target="_blank" 
                             rel="noopener noreferrer" 
                             key={idx}
-                            className="block p-4 border border-slate-900 bg-slate-950/60 hover:bg-slate-950/20 rounded transition-all hover:border-purple-500/30 group relative overflow-hidden"
+                            // shrink-0: this is a flex-column child, so without it
+                            // the cards compress below their content height and
+                            // clip their own titles once the feed fills up.
+                            className="block shrink-0 p-4 border border-slate-900 bg-slate-950/60 hover:bg-slate-950/20 rounded transition-all hover:border-purple-500/30 group relative overflow-hidden"
                           >
                             <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-purple-500/30" />
                             <div className="flex justify-between items-start gap-2 mb-2 font-code text-[10px]">
@@ -845,7 +848,7 @@ export default function App() {
                             target="_blank" 
                             rel="noopener noreferrer" 
                             key={idx}
-                            className="block p-4 border border-slate-900 bg-slate-950/60 hover:bg-slate-950/20 rounded transition-all hover:border-fuchsia-500/30 group relative overflow-hidden"
+                            className="block shrink-0 p-4 border border-slate-900 bg-slate-950/60 hover:bg-slate-950/20 rounded transition-all hover:border-fuchsia-500/30 group relative overflow-hidden"
                           >
                             <div className="absolute top-0 right-0 h-1.5 w-1.5 bg-fuchsia-500/30" />
                             <div className="flex justify-between items-start gap-2 mb-2 font-code text-[10px]">

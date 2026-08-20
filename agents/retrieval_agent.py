@@ -21,6 +21,18 @@ logger = get_logger("jarvis.agents.retrieval")
 _MAX_WORKERS = 5
 
 
+def _broaden(queries: list[str]) -> list[str]:
+    """Derive short fallback queries from over-specific ones.
+
+    Takes the first two words of each original query — enough to stay on topic
+    while restoring recall — and always includes a catch-all so the retry
+    cannot itself come back empty.
+    """
+    broadened = {" ".join(q.split()[:2]) for q in queries if q.split()}
+    broadened.discard("")
+    return [*sorted(broadened)[:2], "artificial intelligence"]
+
+
 def _dedupe_by_title(articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Drop exact title repeats while preserving order."""
     seen: set[str] = set()
@@ -57,6 +69,16 @@ def run_retrieval_agent(plan: dict[str, list[str]]) -> dict[str, list[dict[str, 
         paper_futures = [pool.submit(fetch_ai_papers, query=q) for q in paper_queries]
         articles = [item for future in news_futures for item in future.result()]
         papers = [item for future in paper_futures for item in future.result()]
+
+    # A planner can produce queries so specific that every one returns nothing,
+    # leaving the briefing with no news at all. Retry once with broad terms
+    # rather than shipping an empty feed.
+    if not articles:
+        broad = _broaden(news_queries)
+        logger.warning("All news queries returned nothing — retrying with %s", broad)
+        with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as pool:
+            retries = [pool.submit(fetch_ai_news, query=q) for q in broad]
+            articles = [item for future in retries for item in future.result()]
 
     raw_count = len(articles)
     articles = _dedupe_by_title(articles)

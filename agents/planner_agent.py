@@ -31,6 +31,20 @@ Recent briefings (do NOT repeat these angles):
 
 Choose search queries that surface *new* developments relevant to the operator.
 
+CRITICAL — query format. `news_queries` are sent to a keyword search engine
+that requires EVERY term to appear in an article. Long descriptive phrases
+match nothing.
+
+- Each news query: 1-3 words maximum. Keywords, not sentences.
+- Good: "AI agents", "Gemini", "open source LLM", "AI regulation"
+- Bad:  "Google DeepMind agentic AI coding frameworks announcement"
+- Do not append words like "news", "announcement", "developments" or "latest".
+
+`paper_queries` search arXiv and may be slightly longer (2-5 words), but should
+still read as topic keywords rather than questions.
+
+`focus_topics` are classification labels for ranking — short noun phrases.
+
 Return ONLY a valid JSON object, no markdown fences and no commentary:
 {{
   "news_queries": ["query1", "query2", "query3"],
@@ -38,6 +52,10 @@ Return ONLY a valid JSON object, no markdown fences and no commentary:
   "focus_topics": ["topic1", "topic2", "topic3"]
 }}
 """
+
+# NewsAPI ANDs every term, so recall collapses past a few words. Anything the
+# model returns above this is trimmed to its leading terms before searching.
+MAX_NEWS_QUERY_WORDS = 4
 
 
 def _extract_json(raw: str) -> dict[str, Any]:
@@ -63,6 +81,17 @@ def _fallback_plan(preferences: dict[str, Any]) -> dict[str, list[str]]:
     }
 
 
+def _trim_query(query: str, max_words: int) -> str:
+    """Keep only the leading terms of an over-long search query.
+
+    Models routinely ignore the "1-3 words" instruction and return a sentence.
+    Truncating is better than searching verbatim, because a keyword engine that
+    ANDs every term returns nothing for a seven-word phrase.
+    """
+    words = query.split()
+    return " ".join(words[:max_words]) if len(words) > max_words else query
+
+
 def _validate(plan: Any, preferences: dict[str, Any]) -> dict[str, list[str]]:
     """Coerce an LLM plan into the expected shape, filling gaps from preferences."""
     fallback = _fallback_plan(preferences)
@@ -76,6 +105,8 @@ def _validate(plan: Any, preferences: dict[str, Any]) -> dict[str, list[str]]:
             if isinstance(value, list)
             else []
         )
+        if key == "news_queries":
+            items = [_trim_query(item, MAX_NEWS_QUERY_WORDS) for item in items]
         validated[key] = items or fallback[key]
     return validated
 
